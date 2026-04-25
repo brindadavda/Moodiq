@@ -67,7 +67,7 @@ class MusicRepositoryImpl(
 
     override suspend fun isFavorite(songId: Long): Boolean = favoriteDao.isFavorite(songId)
 
-    override suspend fun loadLyrics(song: Song): List<LyricLine> = lyricsParser.loadLyrics(song.path)
+    override fun loadLyrics(song: Song): List<LyricLine> = lyricsParser.loadLyrics(song.path)
 
     override suspend fun trackPlay(songId: Long, durationPlayed: Long, skipped: Boolean) {
         playHistoryDao.insert(
