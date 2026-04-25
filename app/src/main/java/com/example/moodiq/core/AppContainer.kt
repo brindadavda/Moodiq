@@ -3,6 +3,7 @@ package com.example.moodiq.core
 import android.content.Context
 import androidx.room.Room
 import com.example.moodiq.data.local.MoodiqDatabase
+import com.example.moodiq.data.media.AudioToTextLyricsGenerator
 import com.example.moodiq.data.media.LyricsParser
 import com.example.moodiq.data.media.MediaStoreDataSource
 import com.example.moodiq.data.repository.MusicRepositoryImpl
@@ -17,16 +18,19 @@ import com.example.moodiq.domain.usecase.ToggleFavoriteUseCase
 import com.example.moodiq.player.PlayerController
 
 class AppContainer(context: Context) {
+    private val appContext = context.applicationContext
+
     private val db = Room.databaseBuilder(
-        context,
+        appContext,
         MoodiqDatabase::class.java,
         "moodiq.db"
     ).fallbackToDestructiveMigration().build()
 
-    val playerController = PlayerController(context)
+    val playerController = PlayerController(appContext)
+    val audioToTextLyricsGenerator = AudioToTextLyricsGenerator(appContext)
 
     private val repository: MusicRepository = MusicRepositoryImpl(
-        mediaStoreDataSource = MediaStoreDataSource(context),
+        mediaStoreDataSource = MediaStoreDataSource(appContext),
         lyricsParser = LyricsParser(),
         songDao = db.songDao(),
         favoriteDao = db.favoriteDao(),

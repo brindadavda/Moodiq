@@ -34,7 +34,9 @@ class MainViewModel(
         val highlightedLyric: Int = 0,
         val playbackPosition: Long = 0L,
         val playbackDuration: Long = 0L,
-        val permissionGranted: Boolean = false
+        val permissionGranted: Boolean = false,
+        val recordPermissionGranted: Boolean = false,
+        val isGeneratingLyrics: Boolean = false
     )
 
     private val _uiState = MutableStateFlow(UiState())
@@ -49,9 +51,14 @@ class MainViewModel(
         observePlayer()
     }
 
-    fun setPermissionGranted(granted: Boolean) {
-        _uiState.update { it.copy(permissionGranted = granted) }
-        if (granted) refresh()
+    fun setPermissionsGranted(musicGranted: Boolean, recordGranted: Boolean) {
+        _uiState.update {
+            it.copy(
+                permissionGranted = musicGranted,
+                recordPermissionGranted = recordGranted
+            )
+        }
+        if (musicGranted) refresh()
     }
 
     fun refresh() {
@@ -87,18 +94,55 @@ class MainViewModel(
         viewModelScope.launch {
             playerController.currentSong.collect { song ->
                 _uiState.update { it.copy(currentSong = song) }
+                stopLiveLyricsGeneration()
                 if (song != null) {
                     val lyrics = appContainer.musicRepository.loadLyrics(song)
                     _uiState.update { it.copy(lyrics = lyrics, highlightedLyric = 0) }
+                    if (_uiState.value.isPlaying) {
+                        maybeStartLiveLyricsGeneration()
+                    }
                 }
             }
         }
         viewModelScope.launch {
             playerController.isPlaying.collect { playing ->
                 _uiState.update { it.copy(isPlaying = playing) }
-                if (playing) startTicker() else tickerJob?.cancel()
+                if (playing) {
+                    startTicker()
+                    maybeStartLiveLyricsGeneration()
+                } else {
+                    tickerJob?.cancel()
+                    stopLiveLyricsGeneration()
+                }
             }
         }
+    }
+
+    private fun maybeStartLiveLyricsGeneration() {
+        val state = _uiState.value
+        if (state.currentSong == null || state.lyrics.isNotEmpty()) return
+        if (!state.recordPermissionGranted || !appContainer.audioToTextLyricsGenerator.isAvailable()) return
+        if (state.isGeneratingLyrics) return
+
+        _uiState.update { it.copy(isGeneratingLyrics = true) }
+        appContainer.audioToTextLyricsGenerator.start { transcript ->
+            val position = playerController.position()
+            _uiState.update { current ->
+                val shouldAppend = current.lyrics.lastOrNull()?.content?.equals(transcript, ignoreCase = true) != true
+                if (!shouldAppend) return@update current
+                current.copy(
+                    lyrics = current.lyrics + LyricLine(
+                        timestampMs = position,
+                        content = transcript
+                    )
+                )
+            }
+        }
+    }
+
+    private fun stopLiveLyricsGeneration() {
+        appContainer.audioToTextLyricsGenerator.stop()
+        _uiState.update { it.copy(isGeneratingLyrics = false) }
     }
 
     private fun startTicker() {
@@ -150,6 +194,7 @@ class MainViewModel(
     override fun onCleared() {
         super.onCleared()
         tickerJob?.cancel()
+        stopLiveLyricsGeneration()
     }
 
     companion object {
