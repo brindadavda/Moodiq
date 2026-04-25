@@ -143,11 +143,13 @@ class MusicRepositoryImpl(
         val songs = songDao.getAll().map { it.toDomain() }
         val favoriteIds = favoriteDao.getFavoriteIds().toSet()
         val recommendations = getRecommendations()
+        val insights = getInsights()
         val recent = playHistoryDao.recent(20).map { it.songId }
+        val mostPlayedSongs = insights.mostPlayed.mapNotNull { stat -> songs.find { it.id == stat.songId } }
 
         return listOf(
             SmartPlaylist("Favorites", songs.filter { favoriteIds.contains(it.id) }),
-            SmartPlaylist("Most Played", getInsights().mostPlayed.mapNotNull { stat -> songs.find { it.id == stat.songId } }),
+            SmartPlaylist("Most Played", mostPlayedSongs),
             SmartPlaylist("Recently Played", recent.mapNotNull { id -> songs.find { it.id == id } }.distinctBy { it.id }),
             SmartPlaylist("Night Chill", recommendations.smartQueue.take(20))
         )
