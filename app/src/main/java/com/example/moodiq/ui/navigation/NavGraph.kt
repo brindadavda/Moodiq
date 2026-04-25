@@ -8,13 +8,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -41,18 +42,20 @@ fun MoodiqNavGraph(viewModel: MainViewModel) {
             .background(Brush.verticalGradient(listOf(BackgroundTop, BackgroundBottom)))
     ) {
         Scaffold(
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            containerColor = Color.Transparent,
             bottomBar = {
                 val currentDestination = navController.currentBackStackEntryAsState().value?.destination
                 NavigationBar(
                     modifier = Modifier
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                         .clip(RoundedCornerShape(26.dp)),
-                    tonalElevation = 0.dp
+                    tonalElevation = 0.dp,
+                    containerColor = Color(0xCC161B31)
                 ) {
                     listOf(Screen.Home, Screen.Library, Screen.Player, Screen.Favorites, Screen.Insights).forEach { screen ->
+                        val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                         NavigationBarItem(
-                            selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
+                            selected = selected,
                             onClick = {
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) { saveState = true }
@@ -61,7 +64,14 @@ fun MoodiqNavGraph(viewModel: MainViewModel) {
                                 }
                             },
                             icon = { Icon(screen.icon, contentDescription = screen.title) },
-                            label = { Text(screen.title) }
+                            label = { if (selected) Text(screen.title) },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = Color.White,
+                                selectedTextColor = Color.White,
+                                indicatorColor = Color.White.copy(alpha = 0.14f),
+                                unselectedIconColor = Color.White.copy(alpha = 0.66f),
+                                unselectedTextColor = Color.White.copy(alpha = 0.66f)
+                            )
                         )
                     }
                 }
