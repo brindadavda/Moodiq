@@ -1,6 +1,5 @@
 package com.example.moodiq.data.media
 
-import android.media.MediaMetadataRetriever
 import com.example.moodiq.domain.model.LyricLine
 import java.io.File
 import kotlin.math.max
@@ -20,13 +19,6 @@ class LyricsParser {
             }
         }
 
-        extractEmbeddedLyrics(songPath)?.let { embedded ->
-            val lines = embedded.lineSequence().map { it.trim() }.filter { it.isNotEmpty() }.toList()
-            if (lines.isNotEmpty()) {
-                return toTimedLyrics(lines, durationMs)
-            }
-        }
-
         return buildAutoKaraokeLines(title, artist, durationMs)
     }
 
@@ -39,18 +31,6 @@ class LyricsParser {
             val text = match.groupValues[4].ifBlank { "..." }
             LyricLine((minutes * 60_000) + (seconds * 1_000) + millis, text)
         }.sortedBy { it.timestampMs }
-    }
-
-    private fun extractEmbeddedLyrics(songPath: String): String? {
-        val retriever = MediaMetadataRetriever()
-        return try {
-            retriever.setDataSource(songPath)
-            retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_LYRIC)
-        } catch (_: Exception) {
-            null
-        } finally {
-            retriever.release()
-        }
     }
 
     private fun toTimedLyrics(lines: List<String>, durationMs: Long): List<LyricLine> {
