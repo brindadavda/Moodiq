@@ -41,7 +41,7 @@ class LyricsParser {
                 }
             }
 
-            return@withContext buildAutoKaraokeLines(title, artist, durationMs)
+            return@withContext listOf(LyricLine(0L, "Lyrics not found for this track"))
         }
 
     private fun parseLrc(file: File): List<LyricLine> {
@@ -60,27 +60,75 @@ class LyricsParser {
     }
 
     private fun fetchLyricsFromLrcLib(title: String, artist: String, durationMs: Long): Pair<String?, String?>? {
-        return runCatching {
-            val encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8.toString())
+        val normalizedTitle = normalizeTrackTitle(title)
+        val direct = runCatching {
+            val encodedTitle = URLEncoder.encode(normalizedTitle, StandardCharsets.UTF_8.toString())
             val encodedArtist = URLEncoder.encode(artist, StandardCharsets.UTF_8.toString())
             val encodedDuration = (durationMs / 1_000L).coerceAtLeast(1L)
             val url =
                 "https://lrclib.net/api/get?track_name=$encodedTitle&artist_name=$encodedArtist&duration=$encodedDuration"
-            val connection = java.net.URL(url).openConnection() as HttpURLConnection
+            requestJson(url)?.let { parseLyricsJson(it) }
+        }.getOrNull()
+        if (direct?.first != null || direct?.second != null) return direct
+
+        return runCatching {
+            val query = URLEncoder.encode("$normalizedTitle $artist", StandardCharsets.UTF_8.toString())
+            val searchUrl = "https://lrclib.net/api/search?q=$query"
+            val results = requestJsonArray(searchUrl)
+            if (results.length() == 0) return@runCatching null
+
+            val best = (0 until results.length())
+                .mapNotNull { idx -> results.optJSONObject(idx) }
+                .firstOrNull { item ->
+                    item.optString("trackName").contains(normalizedTitle, ignoreCase = true) ||
+                        item.optString("artistName").contains(artist, ignoreCase = true)
+                } ?: results.optJSONObject(0)
+
+            best?.let { parseLyricsJson(it) }
+        }.getOrNull()
+    }
+
+    private fun requestJson(url: String): JSONObject? {
+        val body = requestBody(url) ?: return null
+        return runCatching { JSONObject(body) }.getOrNull()
+    }
+
+    private fun requestJsonArray(url: String): org.json.JSONArray {
+        val body = requestBody(url).orEmpty()
+        return runCatching { org.json.JSONArray(body) }.getOrDefault(org.json.JSONArray())
+    }
+
+    private fun requestBody(url: String): String? {
+        val connection = java.net.URL(url).openConnection() as HttpURLConnection
+        return try {
             connection.requestMethod = "GET"
             connection.connectTimeout = 7_000
             connection.readTimeout = 7_000
             connection.setRequestProperty("User-Agent", "Moodiq/1.0")
             connection.setRequestProperty("Accept", "application/json")
-
-            connection.inputStream.bufferedReader().use { reader ->
-                val body = reader.readText()
-                val json = JSONObject(body)
-                val synced = json.optString("syncedLyrics").takeIf { it.isNotBlank() && it != "null" }
-                val plain = json.optString("plainLyrics").takeIf { it.isNotBlank() && it != "null" }
-                synced to plain
+            val stream = if (connection.responseCode in 200..299) {
+                connection.inputStream
+            } else {
+                connection.errorStream ?: return null
             }
-        }.getOrNull()
+            stream.bufferedReader().use { it.readText() }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    private fun parseLyricsJson(json: JSONObject): Pair<String?, String?> {
+        val synced = json.optString("syncedLyrics").takeIf { it.isNotBlank() && it != "null" }
+        val plain = json.optString("plainLyrics").takeIf { it.isNotBlank() && it != "null" }
+        return synced to plain
+    }
+
+    private fun normalizeTrackTitle(title: String): String {
+        return title
+            .replace(Regex("\\(.*?\\)|\\[.*?]"), "")
+            .replace(Regex("(?i)\\b(feat\\.?|ft\\.?)\\b.*"), "")
+            .replace(Regex("\\s+"), " ")
+            .trim()
     }
 
     private fun toTimedLyrics(lines: List<String>, durationMs: Long): List<LyricLine> {
