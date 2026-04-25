@@ -148,12 +148,20 @@ class MainViewModel(
     }
 
     private fun ensureQueueInitialized() {
-        if (_uiState.value.currentSong != null) return
-
         val queue = _uiState.value.songs
         if (queue.isEmpty()) return
 
-        playerController.setQueue(queue, startIndex = 0)
+        val currentSong = _uiState.value.currentSong
+        val missingQueueInPlayer = !playerController.hasMediaItems()
+
+        if (currentSong != null && !missingQueueInPlayer) return
+
+        val startIndex = currentSong
+            ?.let { song -> queue.indexOfFirst { it.id == song.id } }
+            ?.takeIf { it >= 0 }
+            ?: 0
+
+        playerController.setQueue(queue, startIndex = startIndex)
     }
 
     fun toggleFavorite(song: Song) {
