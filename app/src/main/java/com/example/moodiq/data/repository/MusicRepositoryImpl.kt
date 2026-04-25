@@ -87,9 +87,12 @@ class MusicRepositoryImpl(
         val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
         val nightMode = hour >= 21 || hour <= 5
         val favorites = favoriteDao.getFavoriteIds().toSet()
+        val skipRatesBySongId = songs.associate { song ->
+            song.id to (playHistoryDao.skipRate(song.id) ?: 0.0)
+        }
 
         val sorted = songs.sortedByDescending { song ->
-            val skipRate = playHistoryDao.skipRate(song.id) ?: 0.0
+            val skipRate = skipRatesBySongId[song.id] ?: 0.0
             val favoriteBoost = if (favorites.contains(song.id)) 2.0 else 0.0
             val nightBoost = if (nightMode && song.title.contains("night", true)) 1.5 else 0.0
             favoriteBoost + nightBoost - skipRate
