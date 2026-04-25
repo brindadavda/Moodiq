@@ -1,10 +1,14 @@
 package com.example.moodiq.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,14 +30,25 @@ fun LibraryScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
         it.title.contains(query, ignoreCase = true) || it.artist.contains(query, ignoreCase = true)
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(vertical = 14.dp)
+    ) {
         item {
-            Text("Library")
+            Text("Library", style = MaterialTheme.typography.headlineSmall)
+        }
+        item {
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
-                modifier = Modifier.padding(vertical = 10.dp),
-                label = { Text("Search songs") }
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                singleLine = true,
+                label = { Text("Search songs or artists") }
             )
         }
         items(filtered, key = { it.id }) { song ->

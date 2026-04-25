@@ -1,11 +1,15 @@
 package com.example.moodiq.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -19,20 +23,54 @@ fun InsightsScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
     val state by viewModel.uiState.collectAsState()
     val insight = state.insights
 
-    LazyColumn(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        contentPadding = PaddingValues(vertical = 14.dp)
+    ) {
         item {
-            Text("Listening Insights")
-            Card(modifier = Modifier.padding(vertical = 8.dp)) {
-                Text("Favorite artist: ${insight?.favoriteArtist ?: "Unknown"}", modifier = Modifier.padding(16.dp))
+            Text("Listening Insights", style = MaterialTheme.typography.headlineSmall)
+        }
+        item {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Text(
+                    "Favorite artist: ${insight?.favoriteArtist ?: "Unknown"}",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
-            Card(modifier = Modifier.padding(vertical = 8.dp)) {
-                Text("Mood insight: ${insight?.moodInsight ?: "No data yet"}", modifier = Modifier.padding(16.dp))
+        }
+        item {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            ) {
+                Text(
+                    "Mood insight: ${insight?.moodInsight ?: "No data yet"}",
+                    modifier = Modifier.padding(16.dp),
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
-            Text("Most Played")
+        }
+        item {
+            Text("Most Played", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top = 6.dp))
         }
         items(insight?.mostPlayed ?: emptyList(), key = { it.songId }) {
-            Card(modifier = Modifier.padding(vertical = 4.dp)) {
-                Text("${it.title} • ${it.playCount} plays", modifier = Modifier.padding(12.dp))
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Text(
+                    text = "${it.title} • ${it.playCount} plays",
+                    modifier = Modifier.padding(14.dp),
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
