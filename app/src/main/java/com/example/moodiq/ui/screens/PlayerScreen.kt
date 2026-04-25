@@ -117,20 +117,9 @@ fun PlayerScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
         )
-        if (state.isGeneratingLyrics) {
+        if (state.lyrics.isEmpty() && state.currentSong != null) {
             Text(
-                "Generating lyrics from audio…",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-        } else if (state.lyrics.isEmpty() && state.currentSong != null && state.isPlaying) {
-            Text(
-                if (state.recordPermissionGranted) {
-                    "Listening for vocals… make sure audio is audible for transcription."
-                } else {
-                    "Microphone permission is needed to generate live lyrics."
-                },
+                "Generating karaoke lines from the selected song…",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 8.dp)

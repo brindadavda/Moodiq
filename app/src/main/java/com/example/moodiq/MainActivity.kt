@@ -59,52 +59,29 @@ class MainActivity : ComponentActivity() {
 private fun PermissionGate(viewModel: MainViewModel) {
     val state by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-    val mediaPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+    val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.READ_MEDIA_AUDIO
     } else {
         Manifest.permission.READ_EXTERNAL_STORAGE
     }
-    val recordPermission = Manifest.permission.RECORD_AUDIO
 
-    val mediaLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { mediaGranted ->
-        val recordGranted = ContextCompat.checkSelfPermission(
-            context,
-            recordPermission
-        ) == PackageManager.PERMISSION_GRANTED
-        viewModel.setPermissionsGranted(mediaGranted, recordGranted)
-    }
-
-    val recordLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { recordGranted ->
-        val mediaGranted = ContextCompat.checkSelfPermission(
-            context,
-            mediaPermission
-        ) == PackageManager.PERMISSION_GRANTED
-        viewModel.setPermissionsGranted(mediaGranted, recordGranted)
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        viewModel.setPermissionGranted(granted)
     }
 
     LaunchedEffect(Unit) {
-        val mediaGranted = ContextCompat.checkSelfPermission(
+        val granted = ContextCompat.checkSelfPermission(
             context,
-            mediaPermission
+            permission
         ) == PackageManager.PERMISSION_GRANTED
-        val recordGranted = ContextCompat.checkSelfPermission(
-            context,
-            recordPermission
-        ) == PackageManager.PERMISSION_GRANTED
-        viewModel.setPermissionsGranted(mediaGranted, recordGranted)
-    }
-
-    LaunchedEffect(state.permissionGranted, state.recordPermissionGranted) {
-        if (state.permissionGranted && !state.recordPermissionGranted) {
-            recordLauncher.launch(recordPermission)
-        }
+        viewModel.setPermissionGranted(granted)
     }
 
     if (state.permissionGranted) {
         MoodiqNavGraph(viewModel)
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Button(onClick = { mediaLauncher.launch(mediaPermission) }) {
+            Button(onClick = { launcher.launch(permission) }) {
                 Text("Grant music access")
             }
         }

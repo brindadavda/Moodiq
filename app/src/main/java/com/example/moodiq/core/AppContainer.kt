@@ -3,7 +3,6 @@ package com.example.moodiq.core
 import android.content.Context
 import androidx.room.Room
 import com.example.moodiq.data.local.MoodiqDatabase
-import com.example.moodiq.data.media.AudioToTextLyricsGenerator
 import com.example.moodiq.data.media.LyricsParser
 import com.example.moodiq.data.media.MediaStoreDataSource
 import com.example.moodiq.data.repository.MusicRepositoryImpl
@@ -27,8 +26,6 @@ class AppContainer(context: Context) {
     ).fallbackToDestructiveMigration().build()
 
     val playerController = PlayerController(appContext)
-    val audioToTextLyricsGenerator = AudioToTextLyricsGenerator(appContext)
-
     private val repository: MusicRepository = MusicRepositoryImpl(
         mediaStoreDataSource = MediaStoreDataSource(appContext),
         lyricsParser = LyricsParser(),
