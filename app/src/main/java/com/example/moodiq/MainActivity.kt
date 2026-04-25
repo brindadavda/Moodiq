@@ -66,9 +66,19 @@ private fun PermissionGate(viewModel: MainViewModel) {
     }
     val recordPermission = Manifest.permission.RECORD_AUDIO
 
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
-        val mediaGranted = result[mediaPermission] == true
-        val recordGranted = result[recordPermission] == true
+    val mediaLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { mediaGranted ->
+        val recordGranted = ContextCompat.checkSelfPermission(
+            context,
+            recordPermission
+        ) == PackageManager.PERMISSION_GRANTED
+        viewModel.setPermissionsGranted(mediaGranted, recordGranted)
+    }
+
+    val recordLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { recordGranted ->
+        val mediaGranted = ContextCompat.checkSelfPermission(
+            context,
+            mediaPermission
+        ) == PackageManager.PERMISSION_GRANTED
         viewModel.setPermissionsGranted(mediaGranted, recordGranted)
     }
 
@@ -84,11 +94,17 @@ private fun PermissionGate(viewModel: MainViewModel) {
         viewModel.setPermissionsGranted(mediaGranted, recordGranted)
     }
 
+    LaunchedEffect(state.permissionGranted, state.recordPermissionGranted) {
+        if (state.permissionGranted && !state.recordPermissionGranted) {
+            recordLauncher.launch(recordPermission)
+        }
+    }
+
     if (state.permissionGranted) {
         MoodiqNavGraph(viewModel)
     } else {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Button(onClick = { launcher.launch(arrayOf(mediaPermission, recordPermission)) }) {
+            Button(onClick = { mediaLauncher.launch(mediaPermission) }) {
                 Text("Grant music access")
             }
         }

@@ -124,6 +124,17 @@ fun PlayerScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
+        } else if (state.lyrics.isEmpty() && state.currentSong != null && state.isPlaying) {
+            Text(
+                if (state.recordPermissionGranted) {
+                    "Listening for vocals… make sure audio is audible for transcription."
+                } else {
+                    "Microphone permission is needed to generate live lyrics."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
         }
         LazyColumn(modifier = Modifier.weight(1f)) {
             itemsIndexed(state.lyrics) { idx, line ->
