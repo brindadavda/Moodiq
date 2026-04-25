@@ -62,6 +62,7 @@ class PlayerController(context: Context) {
 
     fun duration(): Long = exoPlayer.duration.coerceAtLeast(0L)
     fun position(): Long = exoPlayer.currentPosition
+    fun hasMediaItems(): Boolean = exoPlayer.mediaItemCount > 0
 
     fun release() = exoPlayer.release()
     fun player(): ExoPlayer = exoPlayer

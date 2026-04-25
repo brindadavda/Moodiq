@@ -127,10 +127,42 @@ class MainViewModel(
         playerController.play()
     }
 
-    fun playPause() = playerController.playPause()
-    fun next() = playerController.next()
-    fun previous() = playerController.previous()
-    fun seekTo(position: Long) = playerController.seekTo(position)
+    fun playPause() {
+        ensureQueueInitialized()
+        playerController.playPause()
+    }
+
+    fun next() {
+        ensureQueueInitialized()
+        playerController.next()
+    }
+
+    fun previous() {
+        ensureQueueInitialized()
+        playerController.previous()
+    }
+
+    fun seekTo(position: Long) {
+        ensureQueueInitialized()
+        playerController.seekTo(position)
+    }
+
+    private fun ensureQueueInitialized() {
+        val queue = _uiState.value.songs
+        if (queue.isEmpty()) return
+
+        val currentSong = _uiState.value.currentSong
+        val missingQueueInPlayer = !playerController.hasMediaItems()
+
+        if (currentSong != null && !missingQueueInPlayer) return
+
+        val startIndex = currentSong
+            ?.let { song -> queue.indexOfFirst { it.id == song.id } }
+            ?.takeIf { it >= 0 }
+            ?: 0
+
+        playerController.setQueue(queue, startIndex = startIndex)
+    }
 
     fun toggleFavorite(song: Song) {
         viewModelScope.launch {
