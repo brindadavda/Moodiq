@@ -67,7 +67,7 @@ class MusicRepositoryImpl(
 
     override suspend fun isFavorite(songId: Long): Boolean = favoriteDao.isFavorite(songId)
 
-    override fun loadLyrics(song: Song): List<LyricLine> = lyricsParser.loadLyrics(
+    override suspend fun loadLyrics(song: Song): List<LyricLine> = lyricsParser.loadLyrics(
         songPath = song.path,
         title = song.title,
         artist = song.artist,
