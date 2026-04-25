@@ -116,7 +116,7 @@ class MusicRepositoryImpl(
         }
 
         val favoriteArtist = playHistoryDao.favoriteArtist()?.artist ?: "Unknown"
-        val byHour = playHistoryDao.byHour().associate { it.hour.toIntOrNull() ?: 0 to it.count }
+        val byHour = playHistoryDao.byHour().associate { (it.hour.toIntOrNull() ?: 0) to it.count }
 
         val recent = playHistoryDao.recent(10)
         val recentSongs = songDao.getByIds(recent.map { it.songId }).associateBy { it.id }
@@ -126,7 +126,7 @@ class MusicRepositoryImpl(
 
         val moodInsight = when {
             byHour.filterKeys { it >= 21 || it <= 5 }.values.sum() > 5 -> "You enjoy calm night sessions."
-            mostPlayedStats.firstOrNull()?.playCount ?: 0 > 8 -> "You love replaying your top hits."
+            (mostPlayedStats.firstOrNull()?.playCount ?: 0) > 8 -> "You love replaying your top hits."
             else -> "Balanced listening across the day."
         }
 

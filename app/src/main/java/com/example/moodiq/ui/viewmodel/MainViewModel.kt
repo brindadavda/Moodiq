@@ -57,11 +57,14 @@ class MainViewModel(
     fun refresh() {
         viewModelScope.launch {
             appContainer.scanMusicUseCase()
+            val recommendations = appContainer.getRecommendationsUseCase()
+            val insights = appContainer.getInsightsUseCase()
+            val playlists = appContainer.getDynamicPlaylistsUseCase()
             _uiState.update {
                 it.copy(
-                    recommendations = appContainer.getRecommendationsUseCase(),
-                    insights = appContainer.getInsightsUseCase(),
-                    playlists = appContainer.getDynamicPlaylistsUseCase()
+                    recommendations = recommendations,
+                    insights = insights,
+                    playlists = playlists
                 )
             }
         }
