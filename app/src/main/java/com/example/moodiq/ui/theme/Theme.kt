@@ -6,15 +6,22 @@ import androidx.compose.runtime.Composable
 
 private val DarkScheme = darkColorScheme(
     primary = Accent,
-    secondary = Accent,
+    onPrimary = TextPrimary,
+    secondary = AccentSecondary,
+    onSecondary = BackgroundDark,
     background = BackgroundDark,
-    surface = CardDark
+    onBackground = TextPrimary,
+    surface = SurfaceDark,
+    onSurface = TextPrimary,
+    surfaceVariant = SurfaceElevated,
+    outline = SurfaceOutline
 )
 
 @Composable
 fun MoodiqTheme(content: @Composable () -> Unit) {
     MaterialTheme(
         colorScheme = DarkScheme,
+        typography = Typography,
         content = content
     )
 }

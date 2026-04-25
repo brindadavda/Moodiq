@@ -11,11 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,30 +37,55 @@ fun PlayerScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
     val state by viewModel.uiState.collectAsState()
     val current = state.currentSong
 
-    Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
-        Text(current?.title ?: "No song", style = MaterialTheme.typography.headlineSmall)
-        Text(current?.artist ?: "-")
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp, vertical = 14.dp)
+    ) {
+        Card(
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Text(current?.title ?: "No song selected", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    current?.artist ?: "Start playback from library",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.72f)
+                )
 
-        Slider(
-            value = state.playbackPosition.toFloat(),
-            onValueChange = { viewModel.seekTo(it.toLong()) },
-            valueRange = 0f..(state.playbackDuration.takeIf { it > 0 } ?: 1L).toFloat(),
-            modifier = Modifier.fillMaxWidth()
-        )
+                Slider(
+                    value = state.playbackPosition.toFloat(),
+                    onValueChange = { viewModel.seekTo(it.toLong()) },
+                    valueRange = 0f..(state.playbackDuration.takeIf { it > 0 } ?: 1L).toFloat(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp)
+                )
 
-        Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-            IconButton(onClick = viewModel::previous) { Icon(Icons.Default.SkipPrevious, null) }
-            IconButton(onClick = viewModel::playPause) {
-                Icon(if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    IconButton(onClick = viewModel::previous) { Icon(Icons.Default.SkipPrevious, null) }
+                    IconButton(onClick = viewModel::playPause) {
+                        Icon(if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow, null)
+                    }
+                    IconButton(onClick = viewModel::next) { Icon(Icons.Default.SkipNext, null) }
+                }
             }
-            IconButton(onClick = viewModel::next) { Icon(Icons.Default.SkipNext, null) }
         }
 
-        Text("Lyrics", modifier = Modifier.padding(top = 12.dp, bottom = 8.dp))
+        Text(
+            "Lyrics",
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+        )
         LazyColumn(modifier = Modifier.weight(1f)) {
             itemsIndexed(state.lyrics) { idx, line ->
                 val color by animateColorAsState(
-                    if (idx == state.highlightedLyric) MaterialTheme.colorScheme.primary else Color.LightGray,
+                    if (idx == state.highlightedLyric) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     label = "lyricHighlight"
                 )
                 Text(
@@ -65,9 +93,16 @@ fun PlayerScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
                     color = color,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 6.dp)
-                        .background(if (idx == state.highlightedLyric) MaterialTheme.colorScheme.primary.copy(alpha = 0.08f) else Color.Transparent)
-                        .padding(8.dp)
+                        .padding(vertical = 4.dp)
+                        .background(
+                            if (idx == state.highlightedLyric) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            } else {
+                                Color.Transparent
+                            },
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
                 )
             }
         }
