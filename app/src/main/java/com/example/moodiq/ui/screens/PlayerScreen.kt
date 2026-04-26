@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.moodiq.ui.theme.Accent
 import com.example.moodiq.ui.theme.AccentSecondary
@@ -116,20 +117,30 @@ fun PlayerScreen(viewModel: MainViewModel, paddingValues: PaddingValues) {
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
         )
+        if (state.lyrics.isEmpty() && state.currentSong != null) {
+            Text(
+                "Generating karaoke lines from the selected song…",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+        }
         LazyColumn(modifier = Modifier.weight(1f)) {
             itemsIndexed(state.lyrics) { idx, line ->
+                val isCurrent = idx == state.highlightedLyric
                 val color by animateColorAsState(
-                    if (idx == state.highlightedLyric) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                    if (isCurrent) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                     label = "lyricHighlight"
                 )
                 Text(
                     text = line.content,
                     color = color,
+                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 4.dp)
                         .background(
-                            if (idx == state.highlightedLyric) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
+                            if (isCurrent) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent,
                             shape = RoundedCornerShape(12.dp)
                         )
                         .padding(horizontal = 12.dp, vertical = 10.dp)

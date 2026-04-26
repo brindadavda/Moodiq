@@ -13,7 +13,7 @@ interface MusicRepository {
     fun observeFavorites(): Flow<List<Song>>
     suspend fun toggleFavorite(songId: Long)
     suspend fun isFavorite(songId: Long): Boolean
-    fun loadLyrics(song: Song): List<LyricLine>
+    suspend fun loadLyrics(song: Song): List<LyricLine>
     suspend fun trackPlay(songId: Long, durationPlayed: Long, skipped: Boolean)
     suspend fun getRecommendations(): RecommendationResult
     suspend fun getInsights(): ListeningInsight
